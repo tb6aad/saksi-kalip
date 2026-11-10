@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ateş Kabı Önizleme</title>
+<title>Saksı Önizleme</title>
 <style>
   :root { --bg:#e9e6e1; --panel:rgba(255,255,255,.88); --text:#222; --muted:#666; --accent:#c8641e; }
   @media (prefers-color-scheme: dark) { :root { --bg:#1d1e20; --panel:rgba(30,31,34,.9); --text:#eee; --muted:#aaa; } }
@@ -29,12 +29,16 @@
     <tr><td>Dış çap (boğum arası oluk)</td><td>Ø 220 mm</td></tr>
     <tr><td>Yükseklik</td><td>100 mm</td></tr>
     <tr><td>Boğum sayısı / boğum yüksekliği</td><td>3 × ~33 mm</td></tr>
-    <tr><td>İç çap (düz duvar)</td><td>Ø 200 mm</td></tr>
-    <tr><td>Et kalınlığı (oluk / tepe)</td><td>10 / 15 mm</td></tr>
-    <tr><td>Taban kalınlığı</td><td>10 mm</td></tr>
     <tr><td>Ağız kenarı</td><td>Üst boğumla tek oval</td></tr>
+    <tr><td>İç çap (dış duvar)</td><td>Ø 200 mm</td></tr>
+    <tr><td><b>Taş kanalı genişliği</b></td><td><b>45 mm</b></td></tr>
+    <tr><td>Taş kanalı derinliği</td><td>~40 mm</td></tr>
+    <tr><td>Ateş yeri sütunu</td><td>Ø 110 mm</td></tr>
+    <tr><td>Sütun üstü (ağız tepesinden)</td><td>5 mm aşağıda</td></tr>
+    <tr><td>Brülör yuvası</td><td>Ø 80 × 50 mm</td></tr>
+    <tr><td>Alçı hacmi / ağırlık (kuru)</td><td id="vol">–</td></tr>
   </table>
-  <div class="note">Et kalınlığı ve taban ölçüleri varsayımdır – onaylanınca Blender'a geçilecek.</div>
+  <div class="note">Kanal derinliği, sütun yüksekliği ve brülör yuvası ölçüleri varsayımdır; kullanacağın brülör kabına göre değiştirilecek.</div>
   <div class="btns">
     <button id="bCut">Kesit</button>
     <button id="bRot" class="on">Döndür</button>
@@ -52,7 +56,12 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // ---- ölçüler (mm) ----
-const H = 100, R_PEAK = 115, R_GROOVE = 110, R_IN = 100, FLOOR = 10, LOBES = 3;
+const H = 100, R_PEAK = 115, R_GROOVE = 110, R_IN = 100, LOBES = 3;
+// iç düzen: 45 mm taş kanalı, ortada ateş yeri sütunu ve brülör yuvası
+const CH_W = 45, COL_R = R_IN - CH_W;          // sütun yarıçapı 55 → Ø110
+const CH_FLOOR = 60;                           // kanal dibi (yerden) → kanal derinliği ~40 mm
+const COL_TOP = 95;                            // sütun üstü, ağız tepesinin 5 mm altı
+const POCKET_R = 40, POCKET_FLOOR = 45;        // brülör yuvası Ø80 × 50 mm
 const S = 0.01; // mm -> sahne birimi
 
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
@@ -99,11 +108,27 @@ function profile() {
     const a = (k / 24) * Math.PI;
     pts.push(new THREE.Vector2((R_PEAK + R_IN) / 2 + (R_PEAK - R_IN) / 2 * Math.cos(a), H - lobeH / 2 + lobeH / 2 * Math.sin(a)));
   }
-  pts.push(new THREE.Vector2(R_IN, FLOOR));      // iç yüzey düz
-  pts.push(new THREE.Vector2(0, FLOOR));
+  // iç: dış duvar (r=100) → 45 mm taş kanalı → orta sütun (ateş yeri) → brülör yuvası
+  const arc = (cr, cy, rad, a0, a1, n = 8) => { for (let k = 1; k <= n; k++) { const a = a0 + (a1 - a0) * k / n; pts.push(new THREE.Vector2(cr + rad * Math.cos(a), cy + rad * Math.sin(a))); } };
+  const F = 4, T = 3;
+  pts.push(new THREE.Vector2(R_IN, CH_FLOOR + F));
+  arc(R_IN - F, CH_FLOOR + F, F, 0, -Math.PI / 2);                 // kanal dibi dış köşe
+  pts.push(new THREE.Vector2(COL_R + F, CH_FLOOR));
+  arc(COL_R + F, CH_FLOOR + F, F, -Math.PI / 2, -Math.PI);         // kanal dibi iç köşe
+  pts.push(new THREE.Vector2(COL_R, COL_TOP - T));
+  arc(COL_R - T, COL_TOP - T, T, 0, Math.PI / 2);                  // sütun dış kenar
+  pts.push(new THREE.Vector2(POCKET_R + T, COL_TOP));
+  arc(POCKET_R + T, COL_TOP - T, T, Math.PI / 2, Math.PI);         // yuva ağzı
+  pts.push(new THREE.Vector2(POCKET_R, POCKET_FLOOR));             // brülör yuvası
+  pts.push(new THREE.Vector2(0, POCKET_FLOOR));
   return pts.map(p => new THREE.Vector2(p.x * S, p.y * S));
 }
 const prof = profile();
+{ // hacim / ağırlık
+  let v = 0; for (let i = 0; i < prof.length; i++) { const a = prof[i], b = prof[(i + 1) % prof.length]; v += (a.x*a.x + a.x*b.x + b.x*b.x) * (b.y - a.y); }
+  const L = Math.abs(v * Math.PI / 3) / (S ** 3) / 1e6;
+  document.getElementById('vol').textContent = `${L.toFixed(2)} L · ~${(L * 1.25).toFixed(1)} kg`;
+}
 
 const potMat = new THREE.MeshStandardMaterial({ color: 0xf2f0ec, roughness: .85, side: THREE.DoubleSide });
 const potGroup = new THREE.Group(); scene.add(potGroup);
