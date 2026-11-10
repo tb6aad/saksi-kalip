@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ateş Kabı Önizleme</title>
+<style>
+  :root { --bg:#e9e6e1; --panel:rgba(255,255,255,.88); --text:#222; --muted:#666; --accent:#c8641e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1d1e20; --panel:rgba(30,31,34,.9); --text:#eee; --muted:#aaa; } }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--text); font-family:system-ui,Segoe UI,sans-serif; overflow:hidden; }
+  #c { display:block; width:100vw; height:100vh; }
+  .panel { position:fixed; top:16px; left:16px; max-width:330px; background:var(--panel); padding:14px 16px; border-radius:10px; font-size:13px; line-height:1.5; box-shadow:0 2px 12px rgba(0,0,0,.15); }
+  .panel h1 { font-size:15px; margin:0 0 8px; }
+  .panel table { border-collapse:collapse; width:100%; }
+  .panel td { padding:2px 0; } .panel td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+  .panel .note { color:var(--muted); font-size:12px; margin-top:6px; }
+  .btns { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  button { font:inherit; font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid #9994; background:transparent; color:var(--text); cursor:pointer; }
+  button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  @media (max-width:600px){ .panel{ left:8px; right:8px; top:8px; max-width:none; font-size:12px; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="panel">
+  <h1>Boğumlu Saksı – Ön Model</h1>
+  <table>
+    <tr><td>Dış çap (boğum tepesi)</td><td>Ø 230 mm</td></tr>
+    <tr><td>Dış çap (boğum arası oluk)</td><td>Ø 220 mm</td></tr>
+    <tr><td>Yükseklik</td><td>100 mm</td></tr>
+    <tr><td>Boğum sayısı / boğum yüksekliği</td><td>3 × ~33 mm</td></tr>
+    <tr><td>İç çap (düz duvar)</td><td>Ø 200 mm</td></tr>
+    <tr><td>Et kalınlığı (oluk / tepe)</td><td>10 / 15 mm</td></tr>
+    <tr><td>Taban kalınlığı</td><td>10 mm</td></tr>
+    <tr><td>Ağız kenarı</td><td>Üst boğumla tek oval</td></tr>
+  </table>
+  <div class="note">Et kalınlığı ve taban ölçüleri varsayımdır – onaylanınca Blender'a geçilecek.</div>
+  <div class="btns">
+    <button id="bCut">Kesit</button>
+    <button id="bRot" class="on">Döndür</button>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ---- ölçüler (mm) ----
+const H = 100, R_PEAK = 115, R_GROOVE = 110, R_IN = 100, FLOOR = 10, LOBES = 3;
+const S = 0.01; // mm -> sahne birimi
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
+const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+camera.position.set(3.6, 2.8, 4.2);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.5, 0);
+controls.enableDamping = true;
+controls.autoRotate = true; controls.autoRotateSpeed = 1.2;
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x887766, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+sun.position.set(3, 5, 2); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left:-2, right:2, top:2, bottom:-2 });
+scene.add(sun);
+
+// zemin
+const ground = new THREE.Mesh(new THREE.CircleGeometry(4, 64), new THREE.MeshStandardMaterial({ color: 0x9a948c, roughness: .9 }));
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+
+// ---- kap profili (r, y) ----
+function profile() {
+  const pts = [];
+  pts.push(new THREE.Vector2(0, 0));
+  pts.push(new THREE.Vector2(R_GROOVE - 3, 0));
+  const lobeH = H / LOBES, N = 24;
+  for (let i = 0; i < LOBES; i++) {
+    for (let k = (i === 0 ? 0 : 1); k <= (i === LOBES - 1 ? N / 2 : N); k++) {
+      const t = k / N;
+      const r = R_GROOVE + (R_PEAK - R_GROOVE) * Math.pow(Math.sin(Math.PI * t), 0.55);
+      pts.push(new THREE.Vector2(r, i * lobeH + t * lobeH));
+    }
+  }
+  // üst boğum en geniş yerinden tek oval halinde ağza dönüp iç duvara bağlanır
+  for (let k = 1; k <= 24; k++) {
+    const a = (k / 24) * Math.PI;
+    pts.push(new THREE.Vector2((R_PEAK + R_IN) / 2 + (R_PEAK - R_IN) / 2 * Math.cos(a), H - lobeH / 2 + lobeH / 2 * Math.sin(a)));
+  }
+  pts.push(new THREE.Vector2(R_IN, FLOOR));      // iç yüzey düz
+  pts.push(new THREE.Vector2(0, FLOOR));
+  return pts.map(p => new THREE.Vector2(p.x * S, p.y * S));
+}
+const prof = profile();
+
+const potMat = new THREE.MeshStandardMaterial({ color: 0xf2f0ec, roughness: .85, side: THREE.DoubleSide });
+const potGroup = new THREE.Group(); scene.add(potGroup);
+
+function buildPot(cut) {
+  potGroup.clear();
+  const len = cut ? Math.PI * 1.5 : Math.PI * 2;
+  const lathe = new THREE.Mesh(new THREE.LatheGeometry(prof, 128, 0, len), potMat);
+  lathe.castShadow = lathe.receiveShadow = true;
+  potGroup.add(lathe);
+  if (cut) {
+    const shape = new THREE.Shape(prof);
+    const capMat = new THREE.MeshStandardMaterial({ color: 0xd9a77a, roughness: .9, side: THREE.DoubleSide });
+    for (const phi of [0, len]) {
+      const cap = new THREE.Mesh(new THREE.ShapeGeometry(shape), capMat);
+      cap.rotation.y = phi - Math.PI / 2;
+      potGroup.add(cap);
+    }
+  }
+}
+buildPot(false);
+
+// ---- butonlar ----
+const toggle = (id, fn) => { const b = document.getElementById(id); b.onclick = () => { b.classList.toggle('on'); fn(b.classList.contains('on')); }; };
+toggle('bCut', on => buildPot(on));
+toggle('bRot', on => controls.autoRotate = on);
+
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+renderer.setAnimationLoop(() => {
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
