@@ -10,9 +10,9 @@
   html,body { margin:0; height:100%; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,sans-serif; overflow:hidden; }
   #c { display:block; width:100vw; height:100vh; }
   .panel { position:fixed; background:var(--panel); padding:12px 14px; border-radius:10px; font-size:13px; line-height:1.5; box-shadow:0 2px 12px rgba(0,0,0,.15); box-sizing:border-box; }
-  #left { left:16px; top:16px; width:330px; max-height:calc(100vh - 230px); overflow:auto; }
-  #right { right:16px; top:16px; width:330px; max-height:calc(100vh - 230px); overflow:auto; }
-  #steps { left:50%; transform:translateX(-50%); bottom:16px; width:min(740px, calc(100vw - 32px)); }
+  #left { left:16px; top:16px; width:340px; max-height:calc(100vh - 240px); overflow:auto; }
+  #right { right:16px; top:16px; width:340px; max-height:calc(100vh - 240px); overflow:auto; }
+  #steps { left:50%; transform:translateX(-50%); bottom:16px; width:min(760px, calc(100vw - 32px)); }
   #sim { display:none; margin:0 0 8px; padding:8px 10px; border-radius:8px; background:rgba(127,127,127,.12); font-variant-numeric:tabular-nums; }
   #sim .bar { height:6px; border-radius:3px; background:#9994; margin-top:6px; overflow:hidden; }
   #sim .bar i { display:block; height:100%; width:0; background:var(--accent); }
@@ -31,7 +31,7 @@
   #stepTitle { font-weight:600; font-size:15px; }
   #stepNo { color:var(--muted); font-variant-numeric:tabular-nums; }
   #stepDesc { margin:4px 0 10px; min-height:3em; }
-  .dots { display:flex; gap:4px; margin-left:auto; }
+  .dots { display:flex; gap:4px; margin-left:auto; flex-wrap:wrap; }
   .dots i { width:8px; height:8px; border-radius:50%; background:#9996; cursor:pointer; }
   .dots i.on { background:var(--accent); }
   @media (max-width:1000px){ #right{ display:none; } }
@@ -42,15 +42,19 @@
 <canvas id="c"></canvas>
 
 <details class="panel" id="left">
-  <summary>Boğumlu Saksı – Alçı Kalıbı</summary>
+  <summary>Boğumlu Saksı – Alçı Kalıbı (parçalı disk)</summary>
   <table>
-    <tr><td><span class="sw" style="background:#6aa36f"></span>Orta disk (oval oluk + kanal halkası + yuva tıkacı)</td><td>1 adet</td></tr>
-    <tr><td><span class="sw" style="background:#4a8fd6"></span>Dış kalıp çeyreği (taban bölümü dahil)</td><td>4 adet</td></tr>
-    <tr><td>Cıvata M5×20 + somun (flanşlar)</td><td>16 adet</td></tr>
-    <tr><td>Hava deliği Ø3 (halkada 3, tıkaçta 1)</td><td>4 adet</td></tr>
-    <tr><td>Orta disk baskı boyutu</td><td>Ø230 × 63 mm</td></tr>
-    <tr><td>Çeyrek baskı boyutu</td><td>198 × 60 × 113 mm</td></tr>
-    <tr><td>Bambu Lab A1 (256 mm) için</td><td>hepsi sığar</td></tr>
+    <tr><td><span class="sw" style="background:#4a8fd6"></span>Dış kalıp çeyreği (değişmedi)</td><td>4 adet</td></tr>
+    <tr><td><span class="sw" style="background:#6aa36f"></span>Taşıyıcı plaka (oval oluk + sütun üstü)</td><td>1 adet</td></tr>
+    <tr><td><span class="sw" style="background:#e0a030"></span>Kanal halkası dilimi (110°)</td><td>3 adet</td></tr>
+    <tr><td><span class="sw" style="background:#d2553a"></span>Kanal halkası kilit dilimi (30°)</td><td>1 adet</td></tr>
+    <tr><td><span class="sw" style="background:#9b6bc9"></span>Brülör yuvası tıkacı</td><td>1 adet</td></tr>
+    <tr><td>Cıvata M5×20 + somun (çeyrek flanşları)</td><td>16 adet</td></tr>
+    <tr><td>Vida M4×16 (plaka → dilimler ve tıkaç)</td><td>10 adet</td></tr>
+    <tr><td>Çekme cıvatası M5 (dilim/tıkaç arkasındaki somuna)</td><td>1–2 adet</td></tr>
+    <tr><td>Hava deliği Ø3 (her dilimde 1, tıkaçta 1)</td><td>5 adet</td></tr>
+    <tr><td>En büyük baskı (plaka)</td><td>Ø230 × 24 mm</td></tr>
+    <tr><td>Bambu Lab A1 (256 mm)</td><td>hepsi sığar</td></tr>
     <tr><td><b>Halka ve tıkaç çekme açısı</b></td><td><b>3°</b></td></tr>
     <tr><td>Taş kanalı (genişlik × derinlik)</td><td>45 × 50 mm</td></tr>
     <tr><td>Brülör yuvası</td><td>Ø80 × 50 mm</td></tr>
@@ -61,17 +65,19 @@
     <button id="bCut">Kesit</button>
     <button id="bRot">Döndür</button>
   </div>
-  <p class="note">Parmakla / fareyle sürükle: döndür · iki parmak / tekerlek: yakınlaştır</p>
+  <p class="note">Parmakla / fareyle sürükle: döndür · iki parmak / tekerlek: yakınlaştır · ← → tuşları: adımlar</p>
 </details>
 
 <div class="panel" id="right">
-  <h1>Kalıbın yapısı</h1>
+  <h1>Neden parçalı ve neden döndürerek?</h1>
   <ul>
-    <li><b>3° çekme açısı.</b> Kanal halkası ve tıkaç 3° eğimli. Disk 10 mm kalktığında alçıyla arasında ~0,5 mm boşluk açılır ve sürtünme biter. Saksıda bu eğim taşların ve brülör kabının altında kalır, görünmez.</li>
-    <li><b>Hava delikleri.</b> Halkanın tepesinde 3, tıkacın ucunda 1 tane Ø3 delik var. Delikler diskin altından geçer. Döküm sırasında kalıp tarafından bantla kapatılır. Sökerken diskin altından tel geçirilip bant delinir ya da hava üflenir. Hava altına girince vakum kırılır, disk "yapışmaz".</li>
-    <li><b>Orta disk + tabanlı çeyrekler.</b> Saksının içini şekillendiren her şey (oval ağız kenarı, kanal halkası, tıkaç) tek parça Ø230 bir diskte; bu yüzden oval kenar eksiz çıkar. Eski plakanın dış halkası çeyreklerin altına eklendi: çeyrekler kapanınca diski çevreden sarıp ortalar. Hiçbir parça A1 tablasını aşmaz.</li>
+    <li><b>Dönel simetri.</b> Kanal, yuva ve oval kenar hep daire şeklinde. Bu yüzden her parça <b>kendi ekseni etrafında döndürülmeye hiç direnmez</b>, sadece yapışma tutar. Birkaç derece döndürmek yapışmayı koparır, sonra parça düz çekilir.</li>
+    <li><b>Kuvvet bölünür.</b> Tek parça disk yerine 6 parça var. Her biri ayrı çıktığı için gereken kuvvet küçük.</li>
+    <li><b>Kilit dilimi.</b> 30°'lik dar dilim önce düz çekilir. Halkada boşluk açılınca diğer dilimler bu boşluğa doğru döndürülerek gevşetilir.</li>
+    <li><b>Taşıyıcı plaka</b> sadece oval oluğa ve sütun üstüne değer. Arkadaki vidalar sökülünce ilk o kalkar; oval kenar yine eksiz çıkar.</li>
+    <li><b>Çekme somunları.</b> Her dilimin ve tıkacın arkasında M5 somun yuvası var. Bir cıvata takıp pense ya da kaydırmalı çekiçle çekilir. Tıkacın arkasında ayrıca döndürmek için altıgen yuva var.</li>
+    <li><b>Dış çeyrekler değişmedi.</b> Diskin dış çapı (Ø230) ve yüksekliği aynı; mevcut baskıların kullanılır.</li>
   </ul>
-  <p class="note">Baskı sonrası: alçıya değen yüzeyleri zımparala, astar/vernik sprey sık, her dökümde ayırıcı (vazelin, sıvı sabun veya kalıp ayırıcı mum) sür.</p>
 </div>
 
 <div class="panel" id="steps">
@@ -100,13 +106,14 @@ if (innerWidth > 640) document.getElementById('left').open = true;
 // ===== Ölçüler (mm). Kalıp z: 0 = saksı ağız tepesi (aşağıda), 100 = saksı tabanı (döküm yüzeyi) =====
 const H = 100, R_PEAK = 115, R_GROOVE = 110, R_IN = 100, LOBES = 3;
 const SHELL_R = 123, FLANGE_R = 140, FLANGE_T = 6, OVERFILL = 5;
-const BOLT_D = 5.5, BOLT_Z = [2, 27, 62, 96];   // en alttaki cıvata diski sıkıştıran taban bölümünde
-const SEAT = H / LOBES / 2;                 // 16,7: üst boğumun en geniş yeri = disk / çeyrek ayrım çizgisi
+const BOLT_D = 5.5, BOLT_Z = [2, 27, 62, 96];
+const SEAT = H / LOBES / 2;
 const BASE_R = 138, BASE_BOT = -8, DISC_R = R_PEAK, DISC_GAP = 0.15;
-const DRAFT_DEG = 3, DRAFT = Math.tan(DRAFT_DEG * Math.PI / 180);
+const DRAFT = Math.tan(3 * Math.PI / 180);
 const COL_R = 55, CH_Z = 50, COL_TOP_Z = 5, POCKET_R = 40, POCKET_Z = 55, FIL = 4, TOPR = 3;
-const VENT_R = 77.5, PLUG_VENT_R = 20;
-const S = 0.01;
+const LIP_R = 99.2, PLUG_LEDGE = -2, HOLE_R = 6;     // plaka dudağı iç yarıçapı, tıkaç oturma tablası
+const KEY_DEG = 30;                                   // kilit dilimi genişliği
+const S = 0.01, D2R = Math.PI / 180;
 const V2 = (r, z) => new THREE.Vector2(r * S, z * S);
 
 const LOBE_H = H / LOBES;
@@ -116,26 +123,27 @@ const cav = []; for (let k = 0; k <= 80; k++) { const y = (k / 80) * (H - SEAT);
 const rimEll = []; for (let k = 1; k <= 28; k++) { const a = Math.PI * k / 28; rimEll.push([ELL_C + ELL_A * Math.cos(a), SEAT - SEAT * Math.sin(a)]); }
 
 const Z0 = COL_TOP_Z + TOPR;
-const wallR = z => R_IN - (z - SEAT) * DRAFT;      // kanal dış duvarı
-const colR = z => COL_R + (z - Z0) * DRAFT;        // sütun dış yüzü
-const plugR = z => POCKET_R - (z - Z0) * DRAFT;    // brülör yuvası duvarı
-const interior = []; // plakanın şekillendirdiği iç yüz: (100,SEAT) sonrası → yuva ağzı (40, 8)
-const arcP = (cr, cz, r, a0, a1, n = 8) => { for (let k = 1; k <= n; k++) { const a = a0 + (a1 - a0) * k / n; interior.push([cr + r * Math.cos(a), cz + r * Math.sin(a)]); } };
-interior.push([wallR(CH_Z - FIL), CH_Z - FIL]);
-arcP(wallR(CH_Z - FIL) - FIL, CH_Z - FIL, FIL, 0, Math.PI / 2);
-interior.push([colR(CH_Z - FIL) + FIL, CH_Z]);
-arcP(colR(CH_Z - FIL) + FIL, CH_Z - FIL, FIL, Math.PI / 2, Math.PI);
-interior.push([COL_R, Z0]);
-arcP(COL_R - TOPR, Z0, TOPR, 0, -Math.PI / 2);
-interior.push([POCKET_R + TOPR, COL_TOP_Z]);
-arcP(POCKET_R + TOPR, Z0, TOPR, -Math.PI / 2, -Math.PI);   // → (40, 8)
+const wallR = z => R_IN - (z - SEAT) * DRAFT;
+const colR = z => COL_R + (z - Z0) * DRAFT;
+const plugR = z => POCKET_R - (z - Z0) * DRAFT;
+const arcPts = (cr, cz, r, a0, a1, n = 8) => { const o = []; for (let k = 1; k <= n; k++) { const a = a0 + (a1 - a0) * k / n; o.push([cr + r * Math.cos(a), cz + r * Math.sin(a)]); } return o; };
+// kanal: dış duvar (100,SEAT) → dip → sütun dış yüzü (55, 8)
+const channel = [[wallR(CH_Z - FIL), CH_Z - FIL], ...arcPts(wallR(CH_Z - FIL) - FIL, CH_Z - FIL, FIL, 0, Math.PI / 2),
+  [colR(CH_Z - FIL) + FIL, CH_Z], ...arcPts(colR(CH_Z - FIL) + FIL, CH_Z - FIL, FIL, Math.PI / 2, Math.PI), [COL_R, Z0]];
+// sütun üstü: (55,8) → (52,5) → (43,5) → (40,8)
+const colTop = [...arcPts(COL_R - TOPR, Z0, TOPR, 0, -Math.PI / 2), [POCKET_R + TOPR, COL_TOP_Z], ...arcPts(POCKET_R + TOPR, Z0, TOPR, -Math.PI / 2, -Math.PI)];
 const pocket = [[plugR(POCKET_Z), POCKET_Z], [0, POCKET_Z]];
 
-// dış çeyrek: boğumlu duvar + alttaki taban bölümü; iç yüzü orta diski sarar
+// --- profiller (r, z) ---
 const shellProf = [[DISC_R + DISC_GAP, BASE_BOT], [BASE_R, BASE_BOT], [BASE_R, SEAT], [SHELL_R, SEAT], [SHELL_R, H + OVERFILL], [R_GROOVE, H + OVERFILL], ...cav, [DISC_R + DISC_GAP, SEAT]];
-// orta disk: oval oluk + kanal halkası + yuva tıkacı, tek parça Ø230
-const baseProf = [[0, BASE_BOT], [DISC_R, BASE_BOT], [DISC_R, SEAT], ...rimEll, ...interior, ...pocket];
-const castProf = [[0, H], ...cav, ...rimEll, ...interior, ...pocket];
+// taşıyıcı plaka: oval oluk + dudak + dilim yatağı (z=0) + sütun üstü + tıkaç yuvası
+const plateProf = [[HOLE_R, BASE_BOT], [DISC_R, BASE_BOT], [DISC_R, SEAT], ...rimEll, [LIP_R, SEAT], [LIP_R, 0], [COL_R, 0], [COL_R, Z0],
+  ...colTop, [POCKET_R, PLUG_LEDGE], [HOLE_R, PLUG_LEDGE]];
+// kanal halkası dilimi (dönel kesit): plakanın üstünde z=0'dan kanal dibine
+const ringProf = [[COL_R + 0.15, 0], [LIP_R - 0.15, 0], [LIP_R - 0.15, SEAT], [R_IN, SEAT], ...channel.slice(0, -1), [COL_R + 0.15, Z0 + 0.5]];
+// tıkaç: plakadaki yuvaya oturur, ucu brülör yuvasının dibi
+const plugProf = [[0, PLUG_LEDGE], [POCKET_R - 0.15, PLUG_LEDGE], [POCKET_R - 0.15, Z0], ...pocket];
+const castProf = [[0, H], ...cav, ...rimEll, ...channel, ...colTop, ...pocket];
 
 function revVolume(p) { let v = 0; for (let i = 0; i < p.length; i++) { const [r1, z1] = p[i], [r2, z2] = p[(i + 1) % p.length]; v += (r1*r1 + r1*r2 + r2*r2) * (z2 - z1); } return Math.abs(v * Math.PI / 3); }
 const volL = revVolume(castProf) / 1e6, slurry = volL * 1.1;
@@ -164,7 +172,10 @@ const std = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, rough
 const matQ = [0x4a8fd6, 0x3d7bc0, 0x4a8fd6, 0x3d7bc0].map(c => std(c));
 const matCap = std(0x2c5f99);
 const matCast = std(0xf5f3ef, { roughness: .9 }), matCastCap = std(0xdedad2, { roughness: 1 });
-const matBase = std(0x6aa36f), matBaseCap = std(0x4d7f52);
+const matPlate = std(0x6aa36f), matPlateCap = std(0x4d7f52);
+const matSeg = std(0xe0a030), matSegCap = std(0xb37a18);
+const matKey = std(0xd2553a), matKeyCap = std(0xa43e28);
+const matPlug = std(0x9b6bc9), matPlugCap = std(0x75509a);
 const boltMat = new THREE.MeshStandardMaterial({ color: 0xb8bcc2, metalness: 1, roughness: .3 });
 const ventMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
 const tapeMat = new THREE.MeshStandardMaterial({ color: 0xbfe3ff, transparent: true, opacity: .85, roughness: .2, side: THREE.DoubleSide });
@@ -173,7 +184,7 @@ const airMat = new THREE.MeshBasicMaterial({ color: 0x4fc3ff, transparent: true,
 function revolved(prof, phi0, len, mat, capMat) {
   const g = new THREE.Group();
   const v = prof.map(([r, z]) => V2(r, z));
-  const m = new THREE.Mesh(new THREE.LatheGeometry(v, Math.max(8, Math.round(128 * len / (2 * Math.PI))), phi0, len), mat);
+  const m = new THREE.Mesh(new THREE.LatheGeometry(v, Math.max(6, Math.round(128 * len / (2 * Math.PI))), phi0, len), mat);
   m.castShadow = m.receiveShadow = true; g.add(m);
   if (len < 2 * Math.PI - 1e-6 && capMat) {
     const sh = new THREE.Shape(v);
@@ -181,9 +192,22 @@ function revolved(prof, phi0, len, mat, capMat) {
   }
   return g;
 }
-const polar = (r, a, z) => new THREE.Vector3(Math.sin(a) * r * S, z * S, Math.cos(a) * r * S);
+// açı aralığını kesit penceresiyle kesiştir (derece)
+const CUT_WIN = [135, 405];
+function clipRange(a0, a1, cut) {
+  if (!cut) return [[a0, a1]];
+  const out = [];
+  for (const k of [-1, 0, 1]) { const lo = Math.max(a0 + 360 * k, CUT_WIN[0]), hi = Math.min(a1 + 360 * k, CUT_WIN[1]); if (hi > lo + 0.01) out.push([lo, hi]); }
+  return out;
+}
+function revolvedRange(prof, a0, a1, cut, mat, capMat) {
+  const g = new THREE.Group();
+  for (const [lo, hi] of clipRange(a0, a1, cut)) g.add(revolved(prof, lo * D2R, (hi - lo) * D2R, mat, capMat));
+  return g;
+}
+const polar = (r, aDeg, z) => new THREE.Vector3(Math.sin(aDeg * D2R) * r * S, z * S, Math.cos(aDeg * D2R) * r * S);
 
-// --- dış çeyrekler ---
+// --- dış çeyrekler (değişmedi) ---
 function flange(phi, towardPlus, mat) {
   const sh = new THREE.Shape();
   sh.moveTo(SHELL_R * S - .02, BASE_BOT * S); sh.lineTo(FLANGE_R * S, BASE_BOT * S);
@@ -203,8 +227,6 @@ for (let i = 0; i < 4; i++) {
   const mid = phi0 + len / 2; g.userData.dir = new THREE.Vector3(Math.sin(mid), 0, Math.cos(mid));
   scene.add(g); quarters.push(g);
 }
-
-// --- cıvatalar ---
 const hexBolt = (len, r = 2.5, nut = false) => {
   const b = new THREE.Group();
   const shaft = new THREE.Mesh(new THREE.CylinderGeometry(r * S, r * S, len * S, 12), boltMat);
@@ -215,78 +237,142 @@ const hexBolt = (len, r = 2.5, nut = false) => {
 };
 const bolts = new THREE.Group(); scene.add(bolts);
 for (let i = 0; i < 4; i++) {
-  const phi = i * Math.PI / 2 - Math.PI / 4, hr = (SHELL_R + FLANGE_R) / 2;
+  const phiDeg = i * 90 - 45, phi = phiDeg * D2R, hr = (SHELL_R + FLANGE_R) / 2;
   for (const z of BOLT_Z) {
     const b = hexBolt(22, 2.5, true);
-    b.position.copy(polar(hr, phi, z));
+    b.position.copy(polar(hr, phiDeg, z));
     b.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(Math.cos(phi), 0, -Math.sin(phi)));
     bolts.add(b);
   }
 }
 
-// --- ters çevirme grubu: orta disk + alçı ---
+// --- ters çevirme grubu: parçalı disk + alçı ---
 const PIVOT = (H + BASE_BOT) / 2;
 const flip = new THREE.Group(); flip.position.y = PIVOT * S; scene.add(flip);
 const inner = new THREE.Group(); inner.position.y = -PIVOT * S; flip.add(inner);
-const baseGroup = new THREE.Group(); inner.add(baseGroup);
-const castGroup = new THREE.Group(); inner.add(castGroup);
-const win = cut => cut ? [3 * Math.PI / 4, 1.5 * Math.PI] : [0, 2 * Math.PI];
-const ventAngles = [0, 2 * Math.PI / 3, 4 * Math.PI / 3].map(a => a + Math.PI / 6);
 
-function buildBase(cut) {
-  baseGroup.clear(); baseGroup.add(revolved(baseProf, ...win(cut), matBase, matBaseCap));
-  // hava deliği ağızları (diskin altında ve halkanın tepesinde)
-  const holes = [...ventAngles.map(a => [VENT_R, a, CH_Z]), [PLUG_VENT_R, 0, POCKET_Z]];
-  for (const [r, a, zTop] of holes) for (const z of [BASE_BOT - 0.15, zTop + 0.15]) {
-    const d = new THREE.Mesh(new THREE.CircleGeometry(1.8 * S, 16), ventMat);
-    d.position.copy(polar(r, a, z)); d.rotation.x = z < 0 ? Math.PI / 2 : -Math.PI / 2; baseGroup.add(d);
+// dilimler: kilit (-15..15), A (15..125), B (125..235), C (235..345)
+const SEGS = [
+  { id: 'K', a0: -KEY_DEG / 2, a1: KEY_DEG / 2, mat: matKey, cap: matKeyCap },
+  { id: 'A', a0: KEY_DEG / 2, a1: 125, mat: matSeg, cap: matSegCap },
+  { id: 'B', a0: 125, a1: 235, mat: matSeg, cap: matSegCap },
+  { id: 'C', a0: 235, a1: 360 - KEY_DEG / 2, mat: matSeg, cap: matSegCap },
+];
+SEGS.forEach(s => s.mid = (s.a0 + s.a1) / 2);
+const VENT_R = (COL_R + LIP_R) / 2, PLUG_VENT_R = 20;
+const parts = {};       // id → Group (döndürme/kaldırma için)
+const handles = {};     // id → çekme kolu
+function tHandle() {    // M5 çekme cıvatası + T kol
+  const g = new THREE.Group();
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(2.5 * S, 2.5 * S, 40 * S, 10), boltMat); shaft.position.y = -20 * S;
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(4 * S, 4 * S, 60 * S, 10), new THREE.MeshStandardMaterial({ color: 0x333333, roughness: .6 }));
+  bar.rotation.z = Math.PI / 2; bar.position.y = -42 * S;
+  g.add(shaft, bar); g.visible = false; return g;
+}
+function ventDot(r, aDeg, z, up) { const d = new THREE.Mesh(new THREE.CircleGeometry(1.8 * S, 16), ventMat); d.position.copy(polar(r, aDeg, z)); d.rotation.x = up ? -Math.PI / 2 : Math.PI / 2; return d; }
+
+const screws = new THREE.Group();
+function build(cut) {
+  for (const k in parts) inner.remove(parts[k]);
+  // plaka
+  const plate = new THREE.Group();
+  plate.add(revolvedRange(plateProf, 0, 360, cut, matPlate, matPlateCap));
+  for (const s of SEGS) plate.add(ventDot(VENT_R, s.mid, BASE_BOT - 0.15, false));
+  plate.add(ventDot(PLUG_VENT_R, 0, BASE_BOT - 0.15, false));
+  parts.P = plate;
+  // dilimler
+  for (const s of SEGS) {
+    const g = new THREE.Group();
+    g.add(revolvedRange(ringProf, s.a0, s.a1, cut, s.mat, s.cap));
+    g.add(ventDot(VENT_R, s.mid, CH_Z + 0.15, true));
+    const h = handles[s.id] || tHandle(); handles[s.id] = h; h.position.copy(polar(VENT_R, s.mid + 12, 0)); g.add(h);
+    parts[s.id] = g;
+  }
+  // tıkaç
+  const plug = new THREE.Group();
+  plug.add(revolvedRange(plugProf, 0, 360, cut, matPlug, matPlugCap));
+  plug.add(ventDot(PLUG_VENT_R, 0, POCKET_Z + 0.15, true));
+  const hp = handles.T || tHandle(); handles.T = hp; hp.position.set(0, PLUG_LEDGE * S, 0); plug.add(hp);
+  parts.T = plug;
+  for (const k in parts) inner.add(parts[k]);
+}
+// plaka → dilim/tıkaç vidaları (plakanın altında)
+for (const s of SEGS) {
+  const n = s.id === 'K' ? 1 : 2;
+  for (let i = 0; i < n; i++) {
+    const a = n === 1 ? s.mid : s.a0 + (s.a1 - s.a0) * (i + 1) / 3;
+    const b = hexBolt(16, 2); b.rotation.x = Math.PI; b.position.copy(polar(VENT_R + (i ? 8 : -8), a, BASE_BOT + 6)); screws.add(b);
   }
 }
-function buildCast(cut) { castGroup.clear(); castGroup.add(revolved(castProf, ...win(cut), matCast, matCastCap)); }
-buildBase(false); buildCast(false);
+for (let i = 0; i < 3; i++) { const b = hexBolt(12, 2); b.rotation.x = Math.PI; b.position.copy(polar(28, i * 120 + 60, BASE_BOT + 4)); screws.add(b); }
+inner.add(screws);
 
-// bant (döküm sırasında hava deliklerinin kalıp tarafı)
+const castGroup = new THREE.Group(); inner.add(castGroup);
+function buildCast(cut) { castGroup.clear(); castGroup.add(revolvedRange(castProf, 0, 360, cut, matCast, matCastCap)); }
+build(false); buildCast(false);
+
+// bant + hava parçacıkları
 const tape = new THREE.Group(); inner.add(tape);
-for (const a of ventAngles) { const t = new THREE.Mesh(new THREE.CircleGeometry(7 * S, 20), tapeMat); t.position.copy(polar(VENT_R, a, CH_Z + 0.4)); t.rotation.x = -Math.PI / 2; tape.add(t); }
+for (const s of SEGS) { const t = new THREE.Mesh(new THREE.CircleGeometry(7 * S, 20), tapeMat); t.position.copy(polar(VENT_R, s.mid, CH_Z + 0.4)); t.rotation.x = -Math.PI / 2; tape.add(t); }
 { const t = new THREE.Mesh(new THREE.CircleGeometry(7 * S, 20), tapeMat); t.position.copy(polar(PLUG_VENT_R, 0, POCKET_Z + 0.4)); t.rotation.x = -Math.PI / 2; tape.add(t); }
-
-// hava parçacıkları (vakumu kırma simülasyonu)
 const air = new THREE.Group(); inner.add(air);
-const airPaths = [...ventAngles.map(a => ({ r: VENT_R, a, z0: BASE_BOT - 25, z1: CH_Z + 3, sprd: 1 })), { r: PLUG_VENT_R, a: 0, z0: BASE_BOT - 25, z1: POCKET_Z + 3, sprd: 1 }];
+const airPaths = [...SEGS.map(s => ({ r: VENT_R, a: s.mid, z0: BASE_BOT - 25, z1: CH_Z + 3 })), { r: PLUG_VENT_R, a: 0, z0: BASE_BOT - 25, z1: POCKET_Z + 3 }];
 const airDots = [];
 for (const p of airPaths) for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(1.6 * S, 8, 6), airMat); m.userData = { p, ph: i / 9 }; air.add(m); airDots.push(m); }
 
 // ===== Adımlar =====
-const BASE = { q: 1.4, bY: 0, bV: 1, tape: 0, airOn: 0, bolts: 0, pour: 0, flip: 0 };
-const READY = { tape: 1 };
+// durum: q çeyrek açıklığı, asm disk montajı, scr vidalar, plY/plV plaka, kY/kV kilit, xR/xY/xV dilim, TR/TY/TV tıkaç, hX kol
+const BASE = { q: 1.4, asm: 0, scr: 0, tape: 0, airOn: 0, bolts: 0, pour: 0, flip: 0, plY: 0, plV: 1,
+  kY: 0, kV: 1, AR: 0, AY: 0, AV: 1, BR: 0, BY: 0, BV: 1, CR: 0, CY: 0, CV: 1, TR: 0, TY: 0, TV: 1,
+  hK: 0, hA: 0, hB: 0, hC: 0, hT: 0 };
+const ASM = { asm: 1, scr: 1 };
+const READY = { ...ASM, tape: 1 };
 const CLOSED = { ...READY, q: 0 };
-const FLIPPED = { q: 1.3, pour: 1, flip: 1, tape: 1 };
+const FL = { ...READY, q: 1.3, pour: 1, flip: 1 };
+const LOOSE = { ...FL, scr: 0, tape: 0 };
+const NOPL = { ...LOOSE, plY: -1.1, plV: 0 };
+const NOK = { ...NOPL, kY: -1.3, kV: 0 };
+const NOA = { ...NOK, AR: -14, AY: -1.3, AV: 0 };
+const NOB = { ...NOA, BR: -14, BY: -1.3, BV: 0 };
+const NOC = { ...NOB, CR: 14, CY: -1.3, CV: 0 };
 const STEPS = [
-  { t: 'Parçalar', d: 'Orta disk (yeşil) ve 4 dış çeyrek (mavi). Diskin kenarındaki oluk oval ağız kenarını, halkası taş kanalını, ortadaki tıkaç brülör yuvasını şekillendirir. Çeyreklerin altında eski taban plakasının dış halkası var.', s: {}, hl: ['base'] },
-  { t: 'Hava deliklerini bantla, ayırıcı sür', d: 'Diski düz bir zemine koy. Halkanın tepesindeki 3 deliği ve tıkacın ucundaki 1 deliği kalıp tarafından küçük bant parçalarıyla kapat. Sonra alçıya değecek tüm yüzeylere ayırıcı sür.', s: { ...READY }, hl: ['tape'] },
-  { t: 'Dış çeyrekleri yerleştir', d: '4 dış çeyreği diskin etrafına diz. Çeyreklerin alt kısmı diskin kenarını sarar; çeyrekler kapandığında disk tam ortada sıkışır, kayamaz.', s: { ...CLOSED }, hl: ['Q'] },
-  { t: 'Cıvatalarla sık', d: 'Yan flanşları 4’er M5 cıvatayla birbirine sık (toplam 16). En alttaki cıvatalar diski çevreden sıkıştırır. Ek yerlerini ve zemine değen kenarları dıştan plastelin veya silikonla sıvayıp sızdırmaz yap.', s: { ...CLOSED, bolts: 1 }, hl: ['bolts'] },
-  { t: 'Alçıyı dök', d: 'Alçıyı üstten yavaşça 100 mm seviyesine kadar dök. Üstte oluşan düz yüzey saksının tabanıdır. Kalıba hafifçe vurarak kabarcıkları çıkar, üstü sıyır ve 45–60 dk bekle.', s: { ...CLOSED, bolts: 1, pour: 1 }, hl: ['cast'] },
-  { t: 'Dış kalıbı aç', d: 'Cıvataları sök ve 4 çeyreği yanlara doğru çek. Kalıp dikey ek yerlerinden açıldığı için boğumlar takılmaz.', s: { ...READY, q: 1.3, pour: 1 }, hl: ['Q'] },
-  { t: 'Ters çevir', d: 'Saksıyı diskle birlikte ters çevir. Artık disk üstte.', s: { ...FLIPPED }, hl: ['cast'] },
-  { t: 'Vakumu kır', d: 'Diskin altındaki 4 hava deliğinden ince bir tel geçirip bantları del ya da deliklere hava üfle. Hava halkanın ve tıkacın ucuna kadar girer; disk artık vakumla yapışık değil.', s: { ...FLIPPED, tape: 0, airOn: 1 }, hl: ['air'] },
-  { t: 'Diski kaldır', d: 'Diski dümdüz yukarı kaldır; halka ve tıkaç birlikte çıkar. 3° eğim sayesinde disk kalktıkça alçıyla arasındaki boşluk büyür, sürtünme hemen biter. Zorlanırsa kenarına hafifçe vur.', s: { ...FLIPPED, tape: 0, bY: -1.0 }, hl: ['base'], sim: 'base' },
-  { t: 'Saksı hazır', d: 'Taş kanalı, brülör yuvası ve oval ağız kenarı eksiz çıktı. 24–48 saat kurumaya bırak, sonra taşları ve brülör kabını yerleştir.', s: { ...FLIPPED, tape: 0, bY: -1.0, bV: 0 }, hl: ['cast'] },
+  { t: 'Parçalar', d: 'Dış çeyrekler (mavi, mevcut baskıların). Parçalı disk: taşıyıcı plaka (yeşil), 3 kanal dilimi (turuncu), 1 kilit dilimi (kırmızı) ve brülör yuvası tıkacı (mor).', s: {}, hl: ['P', 'K', 'A', 'B', 'C', 'T'] },
+  { t: 'Diski birleştir', d: 'Dilimleri ve tıkacı plakanın üstündeki yataklarına oturt. Plakanın altından M4 vidalarla bağla: her büyük dilime 2, kilit dilimine 1, tıkaca 3 vida (toplam 10).', s: { ...ASM }, hl: ['scr'] },
+  { t: 'Hava deliklerini bantla, ayırıcı sür', d: 'Her dilimin tepesindeki ve tıkacın ucundaki hava deliğini küçük bantla kapat. Dilimlerin birbirine değdiği ek yerlerine ince vazelin sür ki alçı sızmasın. Sonra tüm yüzeylere ayırıcı sür.', s: { ...READY }, hl: ['tape'] },
+  { t: 'Dış çeyrekleri yerleştir', d: '4 dış çeyreği diskin etrafına diz. Alt kısımları diski çevreden sarar ve ortalar.', s: { ...CLOSED }, hl: ['Q'] },
+  { t: 'Cıvatalarla sık', d: 'Yan flanşları 4’er M5 cıvatayla birbirine sık (toplam 16). Ek yerlerini dıştan plastelinle sıvayıp sızdırmaz yap.', s: { ...CLOSED, bolts: 1 }, hl: ['bolts'] },
+  { t: 'Alçıyı dök', d: 'Alçıyı üstten 100 mm seviyesine kadar dök, kabarcıkları vurarak çıkar ve donana kadar bekle. Saten alçıda 2–3 saat.', s: { ...CLOSED, bolts: 1, pour: 1 }, hl: ['cast'] },
+  { t: 'Dış kalıbı aç', d: 'Cıvataları sök ve 4 çeyreği yanlara çek.', s: { ...READY, q: 1.3, pour: 1 }, hl: ['Q'] },
+  { t: 'Ters çevir', d: 'Saksıyı diskle birlikte ters çevir. Artık plaka üstte.', s: { ...FL }, hl: ['cast'] },
+  { t: 'Vidaları sök, vakumu kır', d: 'Plakanın arkasındaki 10 vidayı sök. Hava deliklerinden tel geçirip bantları del ya da hava üfle.', s: { ...LOOSE, airOn: 1 }, hl: ['air'] },
+  { t: 'Plakayı kaldır', d: 'Plakayı yukarı kaldır. Sadece oval oluğa ve sütun üstüne değdiği için kolay ayrılır. Dilimler ve tıkaç alçıda kalır.', s: { ...NOPL, plV: 1 }, then: { plV: 0 }, hl: ['P'], sim: 'plate' },
+  { t: '1) Kilit dilimini çek', d: 'Kırmızı kilit diliminin arkasındaki somuna M5 cıvata tak, T kol gibi tutup dümdüz çek. 30° genişliğinde olduğu için az kuvvet ister.', s: { ...NOPL, hK: 1 }, then: { kY: -1.3 }, hl: ['K'], sim: 'K' },
+  { t: '2) Dilimi döndür, çek', d: 'Kanalda 30° boşluk açıldı. İlk dilimi boşluğa doğru birkaç derece döndür: yapışma kopar. Sonra düz çek.', s: { ...NOK, hA: 1 }, then: { AR: -14 }, then2: { AY: -1.3 }, hl: ['A'], sim: 'A' },
+  { t: '3) İkinci dilim', d: 'Aynı şekilde: açılan boşluğa doğru döndür, sonra çek.', s: { ...NOA, hB: 1 }, then: { BR: -14 }, then2: { BY: -1.3 }, hl: ['B'], sim: 'B' },
+  { t: '4) Son dilim', d: 'Son dilimi de boşluğa doğru döndür ve çek. Taş kanalı tamamen boşaldı.', s: { ...NOB, hC: 1 }, then: { CR: 14 }, then2: { CY: -1.3 }, hl: ['C'], sim: 'C' },
+  { t: '5) Tıkacı döndür, çek', d: 'Tıkacın arkasındaki altıgen yuvaya anahtar ya da cıvata takıp birkaç derece sağa sola çevir. Yapışma kopunca düz çek.', s: { ...NOC, hT: 1 }, then: { TR: 25 }, then2: { TY: -1.3 }, hl: ['T'], sim: 'T' },
+  { t: 'Saksı hazır', d: 'Taş kanalı, brülör yuvası ve oval ağız kenarı çıktı. Saten alçıyı 5–7 gün havadar yerde kurut.', s: { ...NOC, TR: 25, TY: -1.3, TV: 0 }, hl: ['cast'] },
 ];
 STEPS.forEach(st => st.s = { ...BASE, ...st.s });
-let step = 0;
+let step = 0, phaseTimers = [];
 const cur = { ...STEPS[0].s };
+let target = { ...STEPS[0].s };
 
 const dots = document.getElementById('dots');
 STEPS.forEach((_, i) => { const d = document.createElement('i'); d.title = STEPS[i].t; d.onclick = () => { stopPlay(); go(i); }; dots.appendChild(d); });
 function go(i) {
   step = Math.max(0, Math.min(STEPS.length - 1, i));
+  const st = STEPS[step];
+  phaseTimers.forEach(clearTimeout); phaseTimers = [];
+  target = { ...st.s };
+  if (st.then) phaseTimers.push(setTimeout(() => { target = { ...target, ...st.then }; }, 1300));
+  if (st.then2) phaseTimers.push(setTimeout(() => { target = { ...target, ...st.then2 }; }, 2800));
   document.getElementById('stepNo').textContent = `Adım ${step + 1}/${STEPS.length} ·`;
-  document.getElementById('stepTitle').textContent = STEPS[step].t;
-  document.getElementById('stepDesc').textContent = STEPS[step].d;
+  document.getElementById('stepTitle').textContent = st.t;
+  document.getElementById('stepDesc').textContent = st.d;
   document.getElementById('bPrev').disabled = step === 0;
   document.getElementById('bNext').disabled = step === STEPS.length - 1;
-  document.getElementById('sim').style.display = STEPS[step].sim || STEPS[step].hl.includes('air') ? 'block' : 'none';
+  document.getElementById('sim').style.display = st.sim || st.hl.includes('air') ? 'block' : 'none';
   [...dots.children].forEach((d, k) => d.classList.toggle('on', k === step));
 }
 document.getElementById('bPrev').onclick = () => { stopPlay(); go(step - 1); };
@@ -298,14 +384,13 @@ bPlay.onclick = () => {
   if (timer) return stopPlay();
   if (step === STEPS.length - 1) go(0);
   bPlay.textContent = '⏸ Durdur'; bPlay.classList.add('on');
-  timer = setInterval(() => { if (step >= STEPS.length - 1) stopPlay(); else go(step + 1); }, 4500);
+  timer = setInterval(() => { if (step >= STEPS.length - 1) stopPlay(); else go(step + 1); }, 5000);
 };
 addEventListener('keydown', e => { if (e.key === 'ArrowRight') { stopPlay(); go(step + 1); } if (e.key === 'ArrowLeft') { stopPlay(); go(step - 1); } });
 go(0);
 
-let cut = false;
 const toggle = (id, fn) => { const b = document.getElementById(id); b.onclick = () => { b.classList.toggle('on'); fn(b.classList.contains('on')); }; };
-toggle('bCut', on => { cut = on; quarters[1].visible = !on; buildBase(on); buildCast(on); });
+toggle('bCut', on => { quarters[1].visible = !on; build(on); buildCast(on); });
 toggle('bRot', on => controls.autoRotate = on);
 
 function resize() {
@@ -318,51 +403,66 @@ window.__view = { camera, controls, go };
 // simülasyon göstergesi
 const simTxt = document.getElementById('simTxt'), simBar = document.getElementById('simBar');
 const fmt = v => v.toFixed(1).replace('.', ',');
+const lift = v => Math.max(0, -v * 100);
 function updateSim() {
   const st = STEPS[step];
   if (st.hl.includes('air')) {
     const p = Math.min(1, cur.airOn);
-    simTxt.innerHTML = p > 0.95 ? '<b class="ok">Hava girdi, vakum kırıldı.</b> Disk artık sadece sürtünmeyle tutuluyor.' : 'Hava deliklerinden hava giriyor…';
+    simTxt.innerHTML = p > 0.95 ? '<b class="ok">Vidalar söküldü, vakum kırıldı.</b>' : 'Hava deliklerinden hava giriyor…';
     simBar.style.width = (p * 100) + '%'; return;
   }
-  if (st.sim === 'base') {
-    const lift = Math.max(0, -cur.bY * 100), gap = lift * DRAFT, plugDepth = POCKET_Z - COL_TOP_Z;
-    const msg = lift >= plugDepth ? '<b class="ok">halka ve tıkaç tamamen çıktı</b>' : lift >= CH_Z ? 'halka çıktı, tıkaç çıkıyor' : lift > 1 ? 'sürtünme yok' : '';
-    simTxt.innerHTML = `Disk kalkışı: <b>${fmt(lift)} mm</b> · alçıyla arasındaki boşluk: <b>${fmt(gap)} mm</b> · ${msg}`;
-    simBar.style.width = Math.min(100, lift / plugDepth * 100) + '%';
+  if (st.sim === 'plate') {
+    const l = lift(cur.plY);
+    simTxt.innerHTML = `Plaka kalkışı: <b>${fmt(Math.min(l, 25))} mm</b> · ` + (l > 17 ? '<b class="ok">oval oluktan ayrıldı</b>' : 'oval ve sütun üstünden ayrılıyor');
+    simBar.style.width = Math.min(100, l / 17 * 100) + '%'; return;
   }
+  const key = st.sim, yKey = key === 'K' ? 'kY' : key + 'Y';
+  const rot = Math.abs(cur[key + 'R'] || 0), l = lift(cur[yKey]);
+  const depth = key === 'T' ? POCKET_Z - PLUG_LEDGE : CH_Z;
+  let msg = '';
+  if (key !== 'K') msg += `Döndürme: <b>${fmt(rot)}°</b> ` + (rot > 3 ? '· <b class="ok">yapışma koptu</b> · ' : '· ');
+  msg += `Çekme: <b>${fmt(Math.min(l, depth))} mm</b> · boşluk: <b>${fmt(Math.min(l, depth) * DRAFT)} mm</b>` + (l >= depth ? ' · <b class="ok">çıktı</b>' : '');
+  simTxt.innerHTML = msg;
+  simBar.style.width = Math.min(100, l / depth * 100) + '%';
 }
 
-function hlMats(key) { return key === 'Q' ? matQ : key === 'cast' ? [matCast] : key === 'bolts' ? [boltMat] : key === 'base' ? [matBase] : key === 'tape' ? [tapeMat] : []; }
-const allKeys = ['Q', 'cast', 'bolts', 'base', 'tape'];
+function hlMats(key) {
+  return { Q: matQ, cast: [matCast], bolts: [boltMat], P: [matPlate], K: [matKey], A: [matSeg], B: [matSeg], C: [matSeg], T: [matPlug], tape: [tapeMat], scr: [boltMat] }[key] || [];
+}
+const allMats = [...matQ, matCast, boltMat, matPlate, matKey, matSeg, matPlug, tapeMat];
 const clock = new THREE.Clock();
 
 renderer.setAnimationLoop(() => {
-  const t = clock.getElapsedTime(), T = STEPS[step].s, k = STEPS[step].sim ? 0.03 : 0.07;
-  for (const key in cur) cur[key] += (T[key] - cur[key]) * k;
+  const t = clock.getElapsedTime(), k = STEPS[step].sim ? 0.045 : 0.07;
+  for (const key in cur) cur[key] += (target[key] - cur[key]) * k;
 
-  quarters.forEach(q => { q.position.copy(q.userData.dir).multiplyScalar(cur.q); q.position.y = 0; });
+  quarters.forEach(q => { q.position.copy(q.userData.dir).multiplyScalar(cur.q); });
   bolts.visible = cur.bolts > 0.5; bolts.position.y = (1 - cur.bolts) * 0.6;
   castGroup.visible = cur.pour > 0.01; castGroup.scale.y = Math.max(0.001, cur.pour);
-  baseGroup.position.y = cur.bY; baseGroup.visible = cur.bV > 0.5;
   tape.visible = cur.tape > 0.5;
+  screws.visible = cur.scr > 0.5; screws.position.y = -(1 - cur.scr) * 0.4;
   flip.rotation.x = Math.PI * cur.flip;
   flip.position.y = PIVOT * S + Math.sin(Math.PI * cur.flip) * 1.4;
 
-  // hava parçacıkları: delik boyunca alçıya doğru akar
+  const off = (1 - cur.asm) * 0.75;          // montaj öncesi: parçalar plakanın üstünde bekler
+  parts.P.position.y = cur.plY; parts.P.visible = cur.plV > 0.5;
+  parts.K.position.y = cur.kY + off; parts.K.visible = cur.kV > 0.5;
+  for (const id of ['A', 'B', 'C']) {
+    parts[id].position.y = cur[id + 'Y'] + off; parts[id].rotation.y = cur[id + 'R'] * D2R; parts[id].visible = cur[id + 'V'] > 0.5;
+  }
+  parts.T.position.y = cur.TY + off * 1.4; parts.T.rotation.y = cur.TR * D2R; parts.T.visible = cur.TV > 0.5;
+  handles.K.visible = cur.hK > 0.5; handles.A.visible = cur.hA > 0.5; handles.B.visible = cur.hB > 0.5; handles.C.visible = cur.hC > 0.5; handles.T.visible = cur.hT > 0.5;
+
   air.visible = cur.airOn > 0.05 && STEPS[step].hl.includes('air');
   if (air.visible) for (const m of airDots) {
     const { p, ph } = m.userData, u = (t * 0.6 + ph) % 1;
-    const z = p.z0 + (p.z1 - p.z0) * u;
-    m.position.copy(polar(p.r, p.a, z)); m.scale.setScalar(u > 0.92 ? 1 + (u - 0.92) * 30 : 1);
+    m.position.copy(polar(p.r, p.a, p.z0 + (p.z1 - p.z0) * u)); m.scale.setScalar(u > 0.92 ? 1 + (u - 0.92) * 30 : 1);
   }
   updateSim();
 
   const pulse = 0.18 + 0.18 * Math.sin(t * 5);
-  for (const key of allKeys) for (const m of hlMats(key)) {
-    const on = STEPS[step].hl.includes(key);
-    m.emissive.setHex(on ? 0xffaa55 : 0x000000); m.emissiveIntensity = on ? pulse : 0;
-  }
+  for (const m of allMats) { m.emissive.setHex(0x000000); m.emissiveIntensity = 0; }
+  for (const key of STEPS[step].hl) for (const m of hlMats(key)) { m.emissive.setHex(0xffaa55); m.emissiveIntensity = pulse; }
   controls.update(); renderer.render(scene, camera);
 });
 </script>
