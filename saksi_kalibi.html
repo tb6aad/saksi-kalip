@@ -55,7 +55,7 @@
     <tr><td>İtme cıvatası M5×40 (plakayı kaldırma)</td><td>7 adet</td></tr>
     <tr><td>Döndürme lama/çıtası (≥ 260 × 20 × 6 mm)</td><td>1 adet</td></tr>
     <tr><td>Hava deliği Ø3 (her dilimde 1, tıkaçta 1)</td><td>5 adet</td></tr>
-    <tr><td>En büyük baskı (plaka)</td><td>Ø230 × 24 mm</td></tr>
+    <tr><td>En büyük baskı (plaka)</td><td>Ø230 × 25 mm</td></tr>
     <tr><td>Bambu Lab A1 (256 mm)</td><td>hepsi sığar</td></tr>
     <tr><td><b>Halka ve tıkaç çekme açısı</b></td><td><b>3°</b></td></tr>
     <tr><td>Taş kanalı (genişlik × derinlik)</td><td>45 × 50 mm</td></tr>
@@ -113,7 +113,7 @@ const SEAT = H / LOBES / 2;
 const BASE_R = 138, BASE_BOT = -8, DISC_R = R_PEAK, DISC_GAP = 0.15;
 const DRAFT = Math.tan(3 * Math.PI / 180);
 const COL_R = 55, CH_Z = 50, COL_TOP_Z = 5, POCKET_R = 40, POCKET_Z = 55, FIL = 4, TOPR = 3;
-const LIP_R = 99.2, PLUG_LEDGE = -2, HOLE_R = 6;     // plaka dudağı iç yarıçapı, tıkaç oturma tablası
+const LIP_R = 99.2, PLUG_LEDGE = 0, HOLE_R = 0;     // plaka dudağı iç yarıçapı, tıkaç oturma tablası
 const KEY_DEG = 30;                                   // kilit dilimi genişliği
 const NUT_R = 72, PLUG_NUT_R = 28;                    // gömülü M5 somunların yarıçapı (dilim / tıkaç)
 const JACK_ANG = [35, 145, 250, 325], PLUG_SCREW_ANG = [0, 120, 240], PLUG_JACK_ANG = [60, 180, 300];
@@ -262,7 +262,8 @@ const SEGS = [
   { id: 'B', a0: 125, a1: 235, mat: matSeg, cap: matSegCap },
   { id: 'C', a0: 235, a1: 360 - KEY_DEG / 2, mat: matSeg, cap: matSegCap },
 ];
-SEGS.forEach(s => { s.mid = (s.a0 + s.a1) / 2; s.nuts = s.id === 'K' ? [s.mid] : [s.a0 + (s.a1 - s.a0) / 3, s.a0 + 2 * (s.a1 - s.a0) / 3]; });
+const VENT_ANG = { K: 0, A: 70, B: 180, C: 320 };
+SEGS.forEach(s => { s.mid = (s.a0 + s.a1) / 2; s.vent = VENT_ANG[s.id]; s.nuts = s.id === 'K' ? [s.mid] : [s.a0 + (s.a1 - s.a0) / 3, s.a0 + 2 * (s.a1 - s.a0) / 3]; });
 const VENT_R = 88, PLUG_VENT_R = 12;
 const parts = {};       // id → Group (döndürme/kaldırma için)
 const handles = {};     // id → çekme kolu
@@ -285,24 +286,26 @@ function build(cut) {
   // plaka
   const plate = new THREE.Group();
   plate.add(revolvedRange(plateProf, 0, 360, cut, matPlate, matPlateCap));
-  for (const s of SEGS) plate.add(ventDot(VENT_R, s.mid, BASE_BOT - 0.15, false));
+  for (const s of SEGS) plate.add(ventDot(VENT_R, s.vent, BASE_BOT - 0.15, false));
   plate.add(ventDot(PLUG_VENT_R, 0, BASE_BOT - 0.15, false));
   // alt yüz: montaj delikleri, itme somunları ve döndürme kanalı
   for (const sg of SEGS) for (const a of sg.nuts) plate.add(holeDot(NUT_R, a, BASE_BOT - 0.2, 2.8));
   for (const a of PLUG_SCREW_ANG) plate.add(holeDot(PLUG_NUT_R, a, BASE_BOT - 0.2, 2.8));
   for (const a of JACK_ANG) plate.add(holeDot(NUT_R, a, BASE_BOT - 0.2, 4.6, 6));
   for (const a of PLUG_JACK_ANG) plate.add(holeDot(PLUG_NUT_R, a, BASE_BOT - 0.2, 4.6, 6));
-  const slot = new THREE.Mesh(new THREE.BoxGeometry(224 * S, 0.4 * S, 21 * S), holeMat);
-  slot.position.y = (BASE_BOT - 0.25) * S; slot.rotation.y = Math.PI / 2; plate.add(slot);
+  for (const side of [1, -1]) {   // döndürme kanalı: merkezi atlayan iki parça, 110° yönünde
+    const slot = new THREE.Mesh(new THREE.BoxGeometry(67 * S, 0.4 * S, 21 * S), holeMat);
+    slot.position.copy(polar(side * 81.5, 110, BASE_BOT - 0.25)); slot.rotation.y = 20 * D2R; plate.add(slot);
+  }
   const bar = new THREE.Mesh(new THREE.BoxGeometry(280 * S, 6 * S, 20 * S), barMat);
-  bar.position.y = (BASE_BOT - 1.5) * S; bar.rotation.y = Math.PI / 2; bar.castShadow = true; bar.visible = false; plate.add(bar);
+  bar.position.y = (BASE_BOT - 1.5) * S; bar.rotation.y = 20 * D2R; bar.castShadow = true; bar.visible = false; plate.add(bar);
   plateBar = bar;
   parts.P = plate;
   // dilimler
   for (const s of SEGS) {
     const g = new THREE.Group();
     g.add(revolvedRange(ringProf, s.a0, s.a1, cut, s.mat, s.cap));
-    g.add(ventDot(VENT_R, s.mid, CH_Z + 0.15, true));
+    g.add(ventDot(VENT_R, s.vent, CH_Z + 0.15, true));
     for (const a of s.nuts) g.add(holeDot(NUT_R, a, -0.15, 2.8));
     const h = handles[s.id] || tHandle(); handles[s.id] = h; h.position.copy(polar(NUT_R, s.nuts[0], 0)); g.add(h);
     parts[s.id] = g;
@@ -337,10 +340,10 @@ build(false); buildCast(false);
 
 // bant + hava parçacıkları
 const tape = new THREE.Group(); inner.add(tape);
-for (const s of SEGS) { const t = new THREE.Mesh(new THREE.CircleGeometry(7 * S, 20), tapeMat); t.position.copy(polar(VENT_R, s.mid, CH_Z + 0.4)); t.rotation.x = -Math.PI / 2; tape.add(t); }
+for (const s of SEGS) { const t = new THREE.Mesh(new THREE.CircleGeometry(7 * S, 20), tapeMat); t.position.copy(polar(VENT_R, s.vent, CH_Z + 0.4)); t.rotation.x = -Math.PI / 2; tape.add(t); }
 { const t = new THREE.Mesh(new THREE.CircleGeometry(7 * S, 20), tapeMat); t.position.copy(polar(PLUG_VENT_R, 0, POCKET_Z + 0.4)); t.rotation.x = -Math.PI / 2; tape.add(t); }
 const air = new THREE.Group(); inner.add(air);
-const airPaths = [...SEGS.map(s => ({ r: VENT_R, a: s.mid, z0: BASE_BOT - 25, z1: CH_Z + 3 })), { r: PLUG_VENT_R, a: 0, z0: BASE_BOT - 25, z1: POCKET_Z + 3 }];
+const airPaths = [...SEGS.map(s => ({ r: VENT_R, a: s.vent, z0: BASE_BOT - 25, z1: CH_Z + 3 })), { r: PLUG_VENT_R, a: 0, z0: BASE_BOT - 25, z1: POCKET_Z + 3 }];
 const airDots = [];
 for (const p of airPaths) for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(1.6 * S, 8, 6), airMat); m.userData = { p, ph: i / 9 }; air.add(m); airDots.push(m); }
 
