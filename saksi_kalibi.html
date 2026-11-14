@@ -50,8 +50,10 @@
     <tr><td><span class="sw" style="background:#d2553a"></span>Kanal halkası kilit dilimi (30°)</td><td>1 adet</td></tr>
     <tr><td><span class="sw" style="background:#9b6bc9"></span>Brülör yuvası tıkacı</td><td>1 adet</td></tr>
     <tr><td>Cıvata M5×20 + somun (çeyrek flanşları)</td><td>16 adet</td></tr>
-    <tr><td>Vida M4×16 (plaka → dilimler ve tıkaç)</td><td>10 adet</td></tr>
-    <tr><td>Çekme cıvatası M5 (dilim/tıkaç arkasındaki somuna)</td><td>1–2 adet</td></tr>
+    <tr><td>Montaj cıvatası M5×16 (plaka → dilim/tıkaç somunu)</td><td>10 adet</td></tr>
+    <tr><td>Gömülü M5 somun (dilim 7, tıkaç 3, plaka itme 7)</td><td>17 adet</td></tr>
+    <tr><td>İtme cıvatası M5×40 (plakayı kaldırma)</td><td>7 adet</td></tr>
+    <tr><td>Döndürme lama/çıtası (≥ 260 × 20 × 6 mm)</td><td>1 adet</td></tr>
     <tr><td>Hava deliği Ø3 (her dilimde 1, tıkaçta 1)</td><td>5 adet</td></tr>
     <tr><td>En büyük baskı (plaka)</td><td>Ø230 × 24 mm</td></tr>
     <tr><td>Bambu Lab A1 (256 mm)</td><td>hepsi sığar</td></tr>
@@ -74,8 +76,8 @@
     <li><b>Dönel simetri.</b> Kanal, yuva ve oval kenar hep daire şeklinde. Bu yüzden her parça <b>kendi ekseni etrafında döndürülmeye hiç direnmez</b>, sadece yapışma tutar. Birkaç derece döndürmek yapışmayı koparır, sonra parça düz çekilir.</li>
     <li><b>Kuvvet bölünür.</b> Tek parça disk yerine 6 parça var. Her biri ayrı çıktığı için gereken kuvvet küçük.</li>
     <li><b>Kilit dilimi.</b> 30°'lik dar dilim önce düz çekilir. Halkada boşluk açılınca diğer dilimler bu boşluğa doğru döndürülerek gevşetilir.</li>
-    <li><b>Taşıyıcı plaka</b> sadece oval oluğa ve sütun üstüne değer. Arkadaki vidalar sökülünce ilk o kalkar; oval kenar yine eksiz çıkar.</li>
-    <li><b>Çekme somunları.</b> Her dilimin ve tıkacın arkasında M5 somun yuvası var. Bir cıvata takıp pense ya da kaydırmalı çekiçle çekilir. Tıkacın arkasında ayrıca döndürmek için altıgen yuva var.</li>
+    <li><b>Taşıyıcı plaka</b> sadece oval oluğa ve sütun üstüne değer; oval kenar yine eksiz çıkar. Plakayı çıkarmak için iki şey var:<br>– Alt yüzdeki <b>çapraz kanala</b> bir lama oturtup plakayı birkaç derece döndürürsün; plakanın değdiği her yüzey daire olduğu için dönmeye engel yok, yapışma kopar.<br>– <b>7 itme cıvatası</b> (kanal üstünde 4, tıkaç üstünde 3): uçları dilimlerin ve tıkacın düz alt yüzüne dayanır; sırayla sıktıkça plaka onlardan itilerek dengeli kalkar.</li>
+    <li><b>Gömülü somunlar.</b> Dilimlerin ve tıkacın alt yüzüne yakın, baskı sırasında içine gömülen M5 somunlar var (Bambu Studio’da “pause” ile). Dökümde plaka bunlara cıvatalanır; sökümde aynı somuna bir M5 cıvata takıp parçayı çekersin. Tıkacın ortasında ayrıca döndürmek için 10 mm altıgen yuva var.</li>
     <li><b>Dış çeyrekler değişmedi.</b> Diskin dış çapı (Ø230) ve yüksekliği aynı; mevcut baskıların kullanılır.</li>
   </ul>
 </div>
@@ -113,6 +115,8 @@ const DRAFT = Math.tan(3 * Math.PI / 180);
 const COL_R = 55, CH_Z = 50, COL_TOP_Z = 5, POCKET_R = 40, POCKET_Z = 55, FIL = 4, TOPR = 3;
 const LIP_R = 99.2, PLUG_LEDGE = -2, HOLE_R = 6;     // plaka dudağı iç yarıçapı, tıkaç oturma tablası
 const KEY_DEG = 30;                                   // kilit dilimi genişliği
+const NUT_R = 72, PLUG_NUT_R = 28;                    // gömülü M5 somunların yarıçapı (dilim / tıkaç)
+const JACK_ANG = [35, 145, 250, 325], PLUG_SCREW_ANG = [0, 120, 240], PLUG_JACK_ANG = [60, 180, 300];
 const S = 0.01, D2R = Math.PI / 180;
 const V2 = (r, z) => new THREE.Vector2(r * S, z * S);
 
@@ -258,8 +262,8 @@ const SEGS = [
   { id: 'B', a0: 125, a1: 235, mat: matSeg, cap: matSegCap },
   { id: 'C', a0: 235, a1: 360 - KEY_DEG / 2, mat: matSeg, cap: matSegCap },
 ];
-SEGS.forEach(s => s.mid = (s.a0 + s.a1) / 2);
-const VENT_R = (COL_R + LIP_R) / 2, PLUG_VENT_R = 20;
+SEGS.forEach(s => { s.mid = (s.a0 + s.a1) / 2; s.nuts = s.id === 'K' ? [s.mid] : [s.a0 + (s.a1 - s.a0) / 3, s.a0 + 2 * (s.a1 - s.a0) / 3]; });
+const VENT_R = 88, PLUG_VENT_R = 12;
 const parts = {};       // id → Group (döndürme/kaldırma için)
 const handles = {};     // id → çekme kolu
 function tHandle() {    // M5 çekme cıvatası + T kol
@@ -269,9 +273,13 @@ function tHandle() {    // M5 çekme cıvatası + T kol
   bar.rotation.z = Math.PI / 2; bar.position.y = -42 * S;
   g.add(shaft, bar); g.visible = false; return g;
 }
+const holeMat = new THREE.MeshBasicMaterial({ color: 0x222222, side: THREE.DoubleSide });
+function holeDot(r, aDeg, z, size, sides = 16) { const d = new THREE.Mesh(new THREE.CircleGeometry(size * S, sides), holeMat); d.position.copy(polar(r, aDeg, z)); d.rotation.x = Math.PI / 2; return d; }
+const barMat = new THREE.MeshStandardMaterial({ color: 0x8a8f96, metalness: .8, roughness: .35 });
 function ventDot(r, aDeg, z, up) { const d = new THREE.Mesh(new THREE.CircleGeometry(1.8 * S, 16), ventMat); d.position.copy(polar(r, aDeg, z)); d.rotation.x = up ? -Math.PI / 2 : Math.PI / 2; return d; }
 
 const screws = new THREE.Group();
+let plateBar = null;
 function build(cut) {
   for (const k in parts) inner.remove(parts[k]);
   // plaka
@@ -279,33 +287,49 @@ function build(cut) {
   plate.add(revolvedRange(plateProf, 0, 360, cut, matPlate, matPlateCap));
   for (const s of SEGS) plate.add(ventDot(VENT_R, s.mid, BASE_BOT - 0.15, false));
   plate.add(ventDot(PLUG_VENT_R, 0, BASE_BOT - 0.15, false));
+  // alt yüz: montaj delikleri, itme somunları ve döndürme kanalı
+  for (const sg of SEGS) for (const a of sg.nuts) plate.add(holeDot(NUT_R, a, BASE_BOT - 0.2, 2.8));
+  for (const a of PLUG_SCREW_ANG) plate.add(holeDot(PLUG_NUT_R, a, BASE_BOT - 0.2, 2.8));
+  for (const a of JACK_ANG) plate.add(holeDot(NUT_R, a, BASE_BOT - 0.2, 4.6, 6));
+  for (const a of PLUG_JACK_ANG) plate.add(holeDot(PLUG_NUT_R, a, BASE_BOT - 0.2, 4.6, 6));
+  const slot = new THREE.Mesh(new THREE.BoxGeometry(224 * S, 0.4 * S, 21 * S), holeMat);
+  slot.position.y = (BASE_BOT - 0.25) * S; slot.rotation.y = Math.PI / 2; plate.add(slot);
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(280 * S, 6 * S, 20 * S), barMat);
+  bar.position.y = (BASE_BOT - 1.5) * S; bar.rotation.y = Math.PI / 2; bar.castShadow = true; bar.visible = false; plate.add(bar);
+  plateBar = bar;
   parts.P = plate;
   // dilimler
   for (const s of SEGS) {
     const g = new THREE.Group();
     g.add(revolvedRange(ringProf, s.a0, s.a1, cut, s.mat, s.cap));
     g.add(ventDot(VENT_R, s.mid, CH_Z + 0.15, true));
-    const h = handles[s.id] || tHandle(); handles[s.id] = h; h.position.copy(polar(VENT_R, s.mid + 12, 0)); g.add(h);
+    for (const a of s.nuts) g.add(holeDot(NUT_R, a, -0.15, 2.8));
+    const h = handles[s.id] || tHandle(); handles[s.id] = h; h.position.copy(polar(NUT_R, s.nuts[0], 0)); g.add(h);
     parts[s.id] = g;
   }
   // tıkaç
   const plug = new THREE.Group();
   plug.add(revolvedRange(plugProf, 0, 360, cut, matPlug, matPlugCap));
   plug.add(ventDot(PLUG_VENT_R, 0, POCKET_Z + 0.15, true));
+  for (const a of PLUG_SCREW_ANG) plug.add(holeDot(PLUG_NUT_R, a, PLUG_LEDGE - 0.15, 2.8));
+  plug.add(holeDot(0, 0, PLUG_LEDGE - 0.15, 5.8, 6));   // 10 mm altıgen döndürme yuvası
   const hp = handles.T || tHandle(); handles.T = hp; hp.position.set(0, PLUG_LEDGE * S, 0); plug.add(hp);
   parts.T = plug;
   for (const k in parts) inner.add(parts[k]);
 }
 // plaka → dilim/tıkaç vidaları (plakanın altında)
-for (const s of SEGS) {
-  const n = s.id === 'K' ? 1 : 2;
-  for (let i = 0; i < n; i++) {
-    const a = n === 1 ? s.mid : s.a0 + (s.a1 - s.a0) * (i + 1) / 3;
-    const b = hexBolt(16, 2); b.rotation.x = Math.PI; b.position.copy(polar(VENT_R + (i ? 8 : -8), a, BASE_BOT + 6)); screws.add(b);
-  }
-}
-for (let i = 0; i < 3; i++) { const b = hexBolt(12, 2); b.rotation.x = Math.PI; b.position.copy(polar(28, i * 120 + 60, BASE_BOT + 4)); screws.add(b); }
+for (const s of SEGS) for (const a of s.nuts) { const b = hexBolt(16); b.rotation.x = Math.PI; b.position.copy(polar(NUT_R, a, BASE_BOT + 6)); screws.add(b); }
+for (const a of PLUG_SCREW_ANG) { const b = hexBolt(16); b.rotation.x = Math.PI; b.position.copy(polar(PLUG_NUT_R, a, BASE_BOT + 6)); screws.add(b); }
 inner.add(screws);
+// itme cıvataları: başı plakanın altında, ucu dilim/tıkaç alt yüzüne dayanır (boyu plaka kalktıkça uzar)
+const jacks = [];
+const jackGroup = new THREE.Group(); inner.add(jackGroup);
+for (const [r, a, tip] of [...JACK_ANG.map(a => [NUT_R, a, 0]), ...PLUG_JACK_ANG.map(a => [PLUG_NUT_R, a, PLUG_LEDGE])]) {
+  const g = new THREE.Group();
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(2.5 * S, 2.5 * S, 1, 12), boltMat);
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(4.2 * S, 4.2 * S, 3.5 * S, 6), boltMat);
+  g.add(shaft, head); g.userData = { r, a, tip, shaft, head }; jackGroup.add(g); jacks.push(g);
+}
 
 const castGroup = new THREE.Group(); inner.add(castGroup);
 function buildCast(cut) { castGroup.clear(); castGroup.add(revolvedRange(castProf, 0, 360, cut, matCast, matCastCap)); }
@@ -322,7 +346,7 @@ for (const p of airPaths) for (let i = 0; i < 9; i++) { const m = new THREE.Mesh
 
 // ===== Adımlar =====
 // durum: q çeyrek açıklığı, asm disk montajı, scr vidalar, plY/plV plaka, kY/kV kilit, xR/xY/xV dilim, TR/TY/TV tıkaç, hX kol
-const BASE = { q: 1.4, asm: 0, scr: 0, tape: 0, airOn: 0, bolts: 0, pour: 0, flip: 0, plY: 0, plV: 1,
+const BASE = { q: 1.4, asm: 0, scr: 0, tape: 0, airOn: 0, bolts: 0, pour: 0, flip: 0, plY: 0, plV: 1, plR: 0, bar: 0, jk: 0,
   kY: 0, kV: 1, AR: 0, AY: 0, AV: 1, BR: 0, BY: 0, BV: 1, CR: 0, CY: 0, CV: 1, TR: 0, TY: 0, TV: 1,
   hK: 0, hA: 0, hB: 0, hC: 0, hT: 0 };
 const ASM = { asm: 1, scr: 1 };
@@ -330,31 +354,32 @@ const READY = { ...ASM, tape: 1 };
 const CLOSED = { ...READY, q: 0 };
 const FL = { ...READY, q: 1.3, pour: 1, flip: 1 };
 const LOOSE = { ...FL, scr: 0, tape: 0 };
-const NOPL = { ...LOOSE, plY: -1.1, plV: 0 };
+const NOPL = { ...LOOSE, plY: -1.1, plV: 0, jk: 0 };
 const NOK = { ...NOPL, kY: -1.3, kV: 0 };
 const NOA = { ...NOK, AR: -14, AY: -1.3, AV: 0 };
 const NOB = { ...NOA, BR: -14, BY: -1.3, BV: 0 };
 const NOC = { ...NOB, CR: 14, CY: -1.3, CV: 0 };
 const STEPS = [
   { t: 'Parçalar', d: 'Dış çeyrekler (mavi, mevcut baskıların). Parçalı disk: taşıyıcı plaka (yeşil), 3 kanal dilimi (turuncu), 1 kilit dilimi (kırmızı) ve brülör yuvası tıkacı (mor).', s: {}, hl: ['P', 'K', 'A', 'B', 'C', 'T'] },
-  { t: 'Diski birleştir', d: 'Dilimleri ve tıkacı plakanın üstündeki yataklarına oturt. Plakanın altından M4 vidalarla bağla: her büyük dilime 2, kilit dilimine 1, tıkaca 3 vida (toplam 10).', s: { ...ASM }, hl: ['scr'] },
+  { t: 'Diski birleştir', d: 'Dilimleri ve tıkacı plakanın üstündeki yataklarına oturt. Plakanın altından 10 adet M5×16 cıvatayla, dilimlerin ve tıkacın içine gömülü somunlara bağla: büyük dilimlere 2’şer, kilit dilimine 1, tıkaca 3.', s: { ...ASM }, hl: ['scr'] },
   { t: 'Hava deliklerini bantla, ayırıcı sür', d: 'Her dilimin tepesindeki ve tıkacın ucundaki hava deliğini küçük bantla kapat. Dilimlerin birbirine değdiği ek yerlerine ince vazelin sür ki alçı sızmasın. Sonra tüm yüzeylere ayırıcı sür.', s: { ...READY }, hl: ['tape'] },
   { t: 'Dış çeyrekleri yerleştir', d: '4 dış çeyreği diskin etrafına diz. Alt kısımları diski çevreden sarar ve ortalar.', s: { ...CLOSED }, hl: ['Q'] },
   { t: 'Cıvatalarla sık', d: 'Yan flanşları 4’er M5 cıvatayla birbirine sık (toplam 16). Ek yerlerini dıştan plastelinle sıvayıp sızdırmaz yap.', s: { ...CLOSED, bolts: 1 }, hl: ['bolts'] },
   { t: 'Alçıyı dök', d: 'Alçıyı üstten 100 mm seviyesine kadar dök, kabarcıkları vurarak çıkar ve donana kadar bekle. Saten alçıda 2–3 saat.', s: { ...CLOSED, bolts: 1, pour: 1 }, hl: ['cast'] },
   { t: 'Dış kalıbı aç', d: 'Cıvataları sök ve 4 çeyreği yanlara çek.', s: { ...READY, q: 1.3, pour: 1 }, hl: ['Q'] },
   { t: 'Ters çevir', d: 'Saksıyı diskle birlikte ters çevir. Artık plaka üstte.', s: { ...FL }, hl: ['cast'] },
-  { t: 'Vidaları sök, vakumu kır', d: 'Plakanın arkasındaki 10 vidayı sök. Hava deliklerinden tel geçirip bantları del ya da hava üfle.', s: { ...LOOSE, airOn: 1 }, hl: ['air'] },
-  { t: 'Plakayı kaldır', d: 'Plakayı yukarı kaldır. Sadece oval oluğa ve sütun üstüne değdiği için kolay ayrılır. Dilimler ve tıkaç alçıda kalır.', s: { ...NOPL, plV: 1 }, then: { plV: 0 }, hl: ['P'], sim: 'plate' },
-  { t: '1) Kilit dilimini çek', d: 'Kırmızı kilit diliminin arkasındaki somuna M5 cıvata tak, T kol gibi tutup dümdüz çek. 30° genişliğinde olduğu için az kuvvet ister.', s: { ...NOPL, hK: 1 }, then: { kY: -1.3 }, hl: ['K'], sim: 'K' },
+  { t: 'Montaj cıvatalarını sök, vakumu kır', d: 'Plakanın arkasındaki 10 montaj cıvatasını sök. Hava deliklerinden tel geçirip bantları del ya da hava üfle.', s: { ...LOOSE, airOn: 1 }, hl: ['air'] },
+  { t: 'Plakayı döndür', d: 'Plakanın alt yüzündeki çapraz kanala bir lama ya da sağlam bir çıta oturt. Kolu kullanarak plakayı birkaç derece sağa sola çevir. Plakanın değdiği her yüzey daire şeklinde olduğu için dönmeye engel yok; yapışma kopar.', s: { ...LOOSE, bar: 1 }, seq: [[900, { plR: 8 }], [2200, { plR: -8 }], [3500, { plR: 0 }]], hl: ['P'], sim: 'twist' },
+  { t: 'İtme cıvatalarıyla kaldır', d: 'Lamayı çıkar. 7 itme deliğine M5×40 cıvata tak: uçları dilimlerin ve tıkacın düz alt yüzüne dayanır. Cıvataları çapraz sırayla yarımşar tur sıkınca plaka dengeli şekilde dilimlerden itilerek kalkar. Dilimler ve tıkaç alçıda kalır.', s: { ...LOOSE, jk: 1 }, seq: [[900, { plY: -0.35 }], [3300, { plY: -1.1, jk: 0 }], [4600, { plV: 0 }]], hl: ['P', 'jack'], sim: 'plate' },
+  { t: '1) Kilit dilimini çek', d: 'Kilit diliminin alt yüzündeki somun deliğine M5 cıvata tak, T kol gibi tutup dümdüz çek. 30° genişliğinde olduğu için az kuvvet ister.', s: { ...NOPL, hK: 1 }, then: { kY: -1.3 }, hl: ['K'], sim: 'K' },
   { t: '2) Dilimi döndür, çek', d: 'Kanalda 30° boşluk açıldı. İlk dilimi boşluğa doğru birkaç derece döndür: yapışma kopar. Sonra düz çek.', s: { ...NOK, hA: 1 }, then: { AR: -14 }, then2: { AY: -1.3 }, hl: ['A'], sim: 'A' },
   { t: '3) İkinci dilim', d: 'Aynı şekilde: açılan boşluğa doğru döndür, sonra çek.', s: { ...NOA, hB: 1 }, then: { BR: -14 }, then2: { BY: -1.3 }, hl: ['B'], sim: 'B' },
   { t: '4) Son dilim', d: 'Son dilimi de boşluğa doğru döndür ve çek. Taş kanalı tamamen boşaldı.', s: { ...NOB, hC: 1 }, then: { CR: 14 }, then2: { CY: -1.3 }, hl: ['C'], sim: 'C' },
-  { t: '5) Tıkacı döndür, çek', d: 'Tıkacın arkasındaki altıgen yuvaya anahtar ya da cıvata takıp birkaç derece sağa sola çevir. Yapışma kopunca düz çek.', s: { ...NOC, hT: 1 }, then: { TR: 25 }, then2: { TY: -1.3 }, hl: ['T'], sim: 'T' },
+  { t: '5) Tıkacı döndür, çek', d: 'Tıkacın ortasındaki 10 mm altıgen yuvaya alyan ya da lokma takıp birkaç derece sağa sola çevir. Yapışma kopunca somun deliklerinden birine M5 cıvata takıp düz çek.', s: { ...NOC, hT: 1 }, then: { TR: 25 }, then2: { TY: -1.3 }, hl: ['T'], sim: 'T' },
   { t: 'Saksı hazır', d: 'Taş kanalı, brülör yuvası ve oval ağız kenarı çıktı. Saten alçıyı 5–7 gün havadar yerde kurut.', s: { ...NOC, TR: 25, TY: -1.3, TV: 0 }, hl: ['cast'] },
 ];
 STEPS.forEach(st => st.s = { ...BASE, ...st.s });
-let step = 0, phaseTimers = [];
+let step = 0, phaseTimers = [], maxTwist = 0;
 const cur = { ...STEPS[0].s };
 let target = { ...STEPS[0].s };
 
@@ -364,9 +389,9 @@ function go(i) {
   step = Math.max(0, Math.min(STEPS.length - 1, i));
   const st = STEPS[step];
   phaseTimers.forEach(clearTimeout); phaseTimers = [];
-  target = { ...st.s };
-  if (st.then) phaseTimers.push(setTimeout(() => { target = { ...target, ...st.then }; }, 1300));
-  if (st.then2) phaseTimers.push(setTimeout(() => { target = { ...target, ...st.then2 }; }, 2800));
+  target = { ...st.s }; maxTwist = 0;
+  const seq = st.seq || [...(st.then ? [[1300, st.then]] : []), ...(st.then2 ? [[2800, st.then2]] : [])];
+  for (const [ms, patch] of seq) phaseTimers.push(setTimeout(() => { target = { ...target, ...patch }; }, ms));
   document.getElementById('stepNo').textContent = `Adım ${step + 1}/${STEPS.length} ·`;
   document.getElementById('stepTitle').textContent = st.t;
   document.getElementById('stepDesc').textContent = st.d;
@@ -411,9 +436,15 @@ function updateSim() {
     simTxt.innerHTML = p > 0.95 ? '<b class="ok">Vidalar söküldü, vakum kırıldı.</b>' : 'Hava deliklerinden hava giriyor…';
     simBar.style.width = (p * 100) + '%'; return;
   }
+  if (st.sim === 'twist') {
+    const r = Math.abs(cur.plR);
+    simTxt.innerHTML = `Plaka dönüşü: <b>${fmt(cur.plR)}°</b> · ` + (maxTwist > 3 ? '<b class="ok">yapışma koptu</b>' : 'lama ile çevriliyor');
+    maxTwist = Math.max(maxTwist, r);
+    simBar.style.width = Math.min(100, maxTwist / 8 * 100) + '%'; return;
+  }
   if (st.sim === 'plate') {
     const l = lift(cur.plY);
-    simTxt.innerHTML = `Plaka kalkışı: <b>${fmt(Math.min(l, 25))} mm</b> · ` + (l > 17 ? '<b class="ok">oval oluktan ayrıldı</b>' : 'oval ve sütun üstünden ayrılıyor');
+    simTxt.innerHTML = `Plaka kalkışı: <b>${fmt(Math.min(l, 25))} mm</b> · itme cıvatası: <b>~${Math.round(Math.min(l, 25) / 0.8)} tur</b> · ` + (l > 17 ? '<b class="ok">oval oluktan ayrıldı</b>' : 'oval ve sütun üstünden ayrılıyor');
     simBar.style.width = Math.min(100, l / 17 * 100) + '%'; return;
   }
   const key = st.sim, yKey = key === 'K' ? 'kY' : key + 'Y';
@@ -427,7 +458,7 @@ function updateSim() {
 }
 
 function hlMats(key) {
-  return { Q: matQ, cast: [matCast], bolts: [boltMat], P: [matPlate], K: [matKey], A: [matSeg], B: [matSeg], C: [matSeg], T: [matPlug], tape: [tapeMat], scr: [boltMat] }[key] || [];
+  return { Q: matQ, cast: [matCast], bolts: [boltMat], jack: [boltMat], P: [matPlate], K: [matKey], A: [matSeg], B: [matSeg], C: [matSeg], T: [matPlug], tape: [tapeMat], scr: [boltMat] }[key] || [];
 }
 const allMats = [...matQ, matCast, boltMat, matPlate, matKey, matSeg, matPlug, tapeMat];
 const clock = new THREE.Clock();
@@ -445,7 +476,15 @@ renderer.setAnimationLoop(() => {
   flip.position.y = PIVOT * S + Math.sin(Math.PI * cur.flip) * 1.4;
 
   const off = (1 - cur.asm) * 0.75;          // montaj öncesi: parçalar plakanın üstünde bekler
-  parts.P.position.y = cur.plY; parts.P.visible = cur.plV > 0.5;
+  parts.P.position.y = cur.plY; parts.P.visible = cur.plV > 0.5; parts.P.rotation.y = cur.plR * D2R;
+  if (plateBar) plateBar.visible = cur.bar > 0.5;
+  jackGroup.visible = cur.jk > 0.02 && cur.plV > 0.5;
+  for (const g of jacks) {
+    const { r, a, tip, shaft, head } = g.userData;
+    const headZ = BASE_BOT + cur.plY * 100 - 1.75, len = Math.max(1, tip - headZ);
+    g.position.copy(polar(r, a, 0)); g.position.y = 0;
+    shaft.scale.y = len * S; shaft.position.y = (headZ + len / 2) * S; head.position.y = headZ * S;
+  }
   parts.K.position.y = cur.kY + off; parts.K.visible = cur.kV > 0.5;
   for (const id of ['A', 'B', 'C']) {
     parts[id].position.y = cur[id + 'Y'] + off; parts[id].rotation.y = cur[id + 'R'] * D2R; parts[id].visible = cur[id + 'V'] > 0.5;
